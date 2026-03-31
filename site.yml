@@ -23,11 +23,35 @@
     when: ansible_distribution == "Amazon"
 
 
-- hosts: web_servers
+- hosts: all
   become: true
   tasks:
 
+  - name:  create simone name
+    tags: always
+    user:
+      name: simone
+      groups: root
 
+  - name:  add ssh key
+    tags: always
+    authorized_key:
+      user: simone
+      key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAURGydhPyx1iXctvJGwd5mATPH8vjLDmdlK+7eY7Fto victorchikwendu38.com"
+
+  - name:  create simone name
+    tags: always
+    copy:
+      src: sudoer_simone
+      dest: /etc/sudoers.d/simone
+      owner: root
+      group: root
+      mode: 0440
+
+
+- hosts: web_servers
+  become: true
+  tasks:
 
   - name:  install apache2 and php for ubuntu servers
     tags: apache, ubuntu
@@ -67,6 +91,31 @@
       state: latest
     when: ansible_distribution == "Amazon"
 
+  - name: start httpd
+    tags: maradb105
+    service:
+      name: httpd
+      state: started
+      enabled: yes
+    when: ansible_distribution == "Amazon"
+
+  - name: change email address for admin
+    tags: mariadb105
+    lineinfile:
+      path: /etc/httpd/conf/httpd.conf
+      regexp: '^ServerAdmin'
+      line: ServerAdmin somebody@somwhere.net
+    when: ansible_distribution == "Amazon"
+    register: httpd
+
+  - name: restart httpd
+    tags: mariadb105
+    service:
+      name: httpd
+      state: restarted
+    when: httpd.changed
+
+
   - name: copy default html file for site
     tags: apache,mariadb105
     copy:
@@ -75,3 +124,21 @@
       owner: root
       group: root
       mode: 0644
+
+- hosts: workstation
+  become: true
+  tasks:
+
+
+  -  name: Install unzip
+     package:
+       name: unzip
+
+  -  name: Install terraform
+     unarchive:
+       src: https://releases.hashicorp.com/terraform/1.14.8/terraform_1.14.8_linux_arm64.zip
+       dest: /usr/local/bin
+       remote_src: yes
+       mode: 0755
+       owner: root
+       group: root
