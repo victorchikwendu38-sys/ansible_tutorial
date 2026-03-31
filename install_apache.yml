@@ -4,38 +4,22 @@
   become: true
   tasks:
 
-  - name: update repository index
+  - name:  install apache2 and php for ubuntu servers
     apt:
+      name:
+        - apache
+        - libapache2-mod-php
+      state: latest
       update_cache: yes
     when: ansible_distribution == "ubuntu"
 
-  - name: install apache2 package
-    apt:
-      name: apache2
-      state: latest
-    when: ansible_distribution == "ubuntu"
-
-  - name: add php support for apache
-    apt:
-      name: libapache2-mod-php
-      state: latest
-    when: ansible_distribution == "ubuntu"
-
-
-  - name: update repository index
+  - name:  install httpd and php for amazon linux 2023 servers
     dnf:
+      name:
+        - httpd
+        - php
+      state: latest
       update_cache: yes
     when: ansible_distribution == "Amazon"
 
-  - name: install httpd package
-    dnf:
-      name: httpd
-      state: latest
-    when: ansible_distribution == "Amazon"
 
-
-  - name: add php support for amazon linux 2023
-    dnf:
-      name: php
-      state: latest
-    when: ansible_distribution == "Amazon"
